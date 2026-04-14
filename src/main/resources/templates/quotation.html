@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Booth Lens Quotation</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; margin: 40px; font-size: 14px; }
+        .header { text-align: center; border-bottom: 2px solid #2c3e50; padding-bottom: 20px; margin-bottom: 30px; }
+        .header h1 { color: #2c3e50; margin: 0; font-size: 28px; }
+        .info-section { width: 100%; margin-bottom: 30px; }
+        .info-section td { padding: 5px; }
+        .table-items { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        .table-items th { background-color: #2c3e50; color: white; padding: 10px; text-align: left; }
+        .table-items td { padding: 10px; border-bottom: 1px solid #ddd; }
+        .summary-row td { font-weight: bold; font-size: 14px; }
+        .total-row td { font-weight: bold; font-size: 18px; border-top: 2px solid #2c3e50; color: #c0392b; }
+        .footer { margin-top: 50px; font-size: 12px; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>BOOTH LENS</h1>
+        <p>Official Exhibition Booth Quotation</p>
+    </div>
+
+    <table class="info-section">
+        <tr>
+            <td><strong>Quotation Ref:</strong></td><td th:text="${referenceCode}">REF-12345</td>
+            <td><strong>Date:</strong></td><td th:text="${currentDate}">2026-04-13</td>
+        </tr>
+        <tr>
+            <td><strong>Client ID:</strong></td><td th:text="${userId}">999</td>
+            <td><strong>Valid Until:</strong></td><td th:text="${validUntil}">2026-05-13</td>
+        </tr>
+    </table>
+
+    <table class="table-items">
+        <thead>
+            <tr>
+                <th>Item Description</th>
+                <th style="text-align: center;">Qty</th>
+                <th style="text-align: right;">Unit Price</th>
+                <th style="text-align: right;">Total Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 🌟 動態迴圈渲染每個項目 -->
+            <tr th:each="item : ${calculation.items}">
+                <td th:text="${item.description}">Description</td>
+                <td style="text-align: center;" th:text="${item.quantity}">1</td>
+                <td style="text-align: right;" th:text="${'$' + #numbers.formatDecimal(item.unitPrice, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
+                <td style="text-align: right;" th:text="${'$' + #numbers.formatDecimal(item.totalPrice, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
+            </tr>
+            
+            <!-- 總計區塊 -->
+            <tr class="summary-row">
+                <td colspan="3" style="text-align: right; border-bottom: none;">Subtotal:</td>
+                <td style="text-align: right; border-bottom: none;" th:text="${'$' + #numbers.formatDecimal(calculation.subtotal, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
+            </tr>
+            <tr class="summary-row">
+                <td colspan="3" style="text-align: right; border-bottom: none;">Tax:</td>
+                <td style="text-align: right; border-bottom: none;" th:text="${'$' + #numbers.formatDecimal(calculation.tax, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
+            </tr>
+            <tr class="total-row">
+                <td colspan="3" style="text-align: right;">TOTAL ESTIMATED COST (USD):</td>
+                <td style="text-align: right;" th:text="${'$' + #numbers.formatDecimal(calculation.total, 1, 'COMMA', 2, 'POINT')}">$0.00</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p><strong>Terms &amp; Conditions:</strong></p>
+        <ul>
+            <li>50% deposit required upon confirmation.</li>
+            <li>Remaining balance due 14 days prior to the event.</li>
+            <li>This quotation is valid for 30 days from the date of issue.</li>
+        </ul>
+        <p>Thank you for choosing Booth Lens!</p>
+    </div>
+
+</body>
+</html>

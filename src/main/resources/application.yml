@@ -1,0 +1,114 @@
+server:
+  address: 0.0.0.0
+  port: 8080
+
+spring:
+  application:
+    name: boothlens-backend
+
+  datasource:
+    url: ${DB_URL}
+    username: admin
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+
+  web:
+    cors:
+      allowed-origins: "http://localhost:3000"
+      allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+      allowed-headers: "*"
+      allow-credentials: true
+
+  security:
+    user:
+      name: admin
+      password: ${SPRING_SECURITY_USER_PASSWORD}
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    org.springframework.security: ERROR
+    root: INFO
+    com.boothlens: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: ERROR
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000
+
+aws:
+  accessKeyId: ${IAM_USER_ACCESS_KEY_ID}
+  secretAccessKey: ${IAM_USER_SECRET_ACCESS_KEY}
+  region: ap-southeast-2
+  s3:
+    bucket: ${AWS_S3_BUCKET}
+    public-base-url: ${AWS_S3_PUBLIC_BASE_URL}
+    image-folder-prefix: user-uploads/
+    pdf-folder-prefix: backend-pdfs/
+
+prompt:
+  system: |
+    You are an expert Trade Show Booth Estimator and Quantity Surveyor. 
+    Your task is to analyze images of a trade show booth design and extract all visible materials, structures, furniture, and equipment into a strict JSON format.
+
+    CRITICAL RULES:
+    1. ONLY output valid JSON. Do not include markdown formatting like ```json or any conversational text.
+    2. Use the user-provided overall dimensions as a baseline to estimate the size and quantity of other items (e.g., carpet area, wall length, TV size).
+    3. If a material or item is unclear, use your best industry judgment, default to standard materials (e.g., 'standard_wood_panel', 'standard_carpet'), and log this in the "unseen_assumptions" array.
+    4. If the back or hidden areas are not visible, explicitly state in "unseen_assumptions" that hidden structural supports and electrical wiring are assumed.
+  user: |
+    Please analyze the attached trade show booth image(s).
+
+    Here are the overall dimensions provided by the user:
+    - Width: {boothWidth} {boothSizeUnit}
+    - Length: {boothLength} {boothSizeUnit}
+    - Height: {boothHeight} {boothSizeUnit}
+    - Total Area: {boothWidth * boothLength} square {boothSizeUnit}
+    - Additional Information: {requestInfo}
+
+    Based on these dimensions and the visual evidence, generate the JSON output following this exact structure:
+    {
+      "booth_specs": {"estimated_area": "", "structure_type": "", "open_sides": 0},
+      "flooring": {"material": "", "color": "", "is_raised_platform": false},
+      "walls": {"material": "", "back_wall_qty": 0, "side_wall_qty": 0},
+      "av_equipment": [{"item": "", "estimated_size_inches": 0, "quantity": 0}],
+      "furniture": [{"item": "", "quantity": 0, "color": ""}],
+      "lighting": [{"type": "", "quantity": 0}],
+      "graphics_and_branding": [{"type": "", "quantity": 0}],
+      "ai_confidence": {"overall_score": 0.0, "unseen_assumptions": []}
+    }
+
+openrouter:
+  api-key: ${OPENROUTER_API_KEY}
+  model: openai/gpt-4o-mini
+  request-url: "https://openrouter.ai/api/v1/chat/completions"

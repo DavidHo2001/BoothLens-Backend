@@ -1,0 +1,52 @@
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+# 註：Spring Boot 3.x 預設不把 maven-wrapper.jar 放進 git，它會在你執行 mvnw 時自動下載，所以這行可以保持這樣
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### 🌟 系統與編譯暫存檔 (OS & Compiled Files) ###
+*.class
+*.log
+*.lock
+logs/
+.DS_Store
+Thumbs.db
+
+### 🌟 本地測試上傳的檔案 (Local Uploads) ###
+# 如果你在本地測試時，圖片或 PDF 是存在專案資料夾內，記得把它們 ignore 掉
+/uploads/
+/temp/
+
+### 🌟 機密設定檔 (Secrets & Local Configs) ###
+# 絕對不要把包含真實密碼的檔案推上 Git！
+.env
+application-local.yml
+application-prod.yml
+application-secret.properties
