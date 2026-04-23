@@ -1,18 +1,26 @@
 package com.boothlens.service;
 
+import com.boothlens.dto.request.admin.UserCreditsAdjustRequestDto;
+import com.boothlens.dto.request.admin.UserCreditsSearchRequestDto;
+import com.boothlens.dto.response.pagination.PaginatedResponseDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.boothlens.entity.UserCredits;
+import com.boothlens.entity.UserRequest;
 import com.boothlens.repository.UserCreditsRepository;
+import com.boothlens.specification.UserCreditsSpecifications;
 import com.boothlens.constant.SystemConstants;
 import com.boothlens.util.ValidationUtils;
 import com.boothlens.mapper.UserMapper;
 import com.boothlens.dto.response.UserCreditsResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class UserCreditsService {
     
@@ -52,6 +60,7 @@ public class UserCreditsService {
         
         // 🌟 呼叫 TransactionService 寫入帳本
         transactionService.recordTokenConsumption(userId, token, superToken, referenceCode);
+        log.info("Consumed {} tokens and {} super tokens for user {} with reference code {}", token, superToken, userId, referenceCode);
     }
 
     /**
@@ -90,4 +99,64 @@ public class UserCreditsService {
         transactionService.recordTokenPurchase(userId, usdCost != null ? usdCost : BigDecimal.ZERO, token, 0, orderRef);
     }
 
+    @Transactional
+    public void refund(UserRequest savedUserRequest, BigDecimal usdAmount, Integer token, Integer superToken) {
+        UserCredits userCredits = userCreditsRepository.findByUserId(savedUserRequest.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException(SystemConstants.ERR_USER_CREDITS_NOT_FOUND));
+        
+        userCredits.setToken(userCredits.getToken() + token);
+        userCredits.setSuperToken(userCredits.getSuperToken() + superToken);
+
+        UserCredits savedUserCredit = userCreditsRepository.saveAndFlush(userCredits);
+
+        transactionService.recordRefund(savedUserCredit.getUserId(), usdAmount, token, superToken, savedUserRequest.getReferenceCode());
+        log.info("Refunded {} USD, {} tokens and {} super tokens for user {} with reference code {}", 
+        usdAmount, token, superToken, savedUserCredit.getUserId(), savedUserRequest.getReferenceCode());
+    }
+
+    public PaginatedResponseDto<UserCreditsResponse> adminSearch(UserCreditsSearchRequestDto request) {
+        Page<UserCredits> page = userCreditsRepository.findAll(
+                UserCreditsSpecifications.withFilters(request.getKeyword(), request.getUserId()),
+                request.getPageable()
+        );
+        return new PaginatedResponseDto<>(page.map(userMapper::toUserCreditsResponse));
+    }
+
+    @Transactional
+    public UserCreditsResponse adminAdjustCredits(UserCreditsAdjustRequestDto request) {
+        if (request.getUserId() == null) {
+            throw new IllegalArgumentException("userId is required");
+        }
+
+        UserCredits userCredits = userCreditsRepository.findByUserId(request.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException(SystemConstants.ERR_USER_CREDITS_NOT_FOUND));
+
+        BigDecimal balanceDelta = request.getBalanceDelta() != null ? request.getBalanceDelta() : BigDecimal.ZERO;
+        Integer tokenDelta = request.getTokenDelta() != null ? request.getTokenDelta() : 0;
+        Integer superTokenDelta = request.getSuperTokenDelta() != null ? request.getSuperTokenDelta() : 0;
+
+        // Apply delta values and block negative balances.
+        BigDecimal newBalance = userCredits.getBalance().add(balanceDelta);
+        int newToken = userCredits.getToken() + tokenDelta;
+        int newSuperToken = userCredits.getSuperToken() + superTokenDelta;
+        if (newBalance.compareTo(BigDecimal.ZERO) < 0 || newToken < 0 || newSuperToken < 0) {
+            throw new IllegalArgumentException("Adjustment would result in negative credits");
+        }
+
+        userCredits.setBalance(newBalance);
+        userCredits.setToken(newToken);
+        userCredits.setSuperToken(newSuperToken);
+        userCreditsRepository.saveAndFlush(userCredits);
+
+        transactionService.createAdminAdjustment(
+                request.getUserId(),
+                balanceDelta,
+                tokenDelta,
+                superTokenDelta,
+                request.getReferenceCode(),
+                request.getDescription()
+        );
+
+        return userMapper.toUserCreditsResponse(userCredits);
+    }
 }

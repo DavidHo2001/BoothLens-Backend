@@ -1,5 +1,6 @@
 package com.boothlens.dto.response.booth;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,14 +11,16 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true) // 忽略未知的根節點欄位
 public class BoothAnalysisResponse {
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true) // 忽略未知的內部欄位
     public static class BoothSpecs {
-        @JsonProperty("estimated_size")
-        private String estimatedSize;
+        @JsonProperty("estimated_area")
+        private String estimatedArea;
 
         @JsonProperty("structure_type")
         private String structureType;
@@ -29,6 +32,7 @@ public class BoothAnalysisResponse {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Flooring {
         private String material;
         private String color;
@@ -40,6 +44,7 @@ public class BoothAnalysisResponse {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Walls {
         private String material;
 
@@ -56,6 +61,7 @@ public class BoothAnalysisResponse {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class AvEquipment {
         private String item;
 
@@ -70,6 +76,7 @@ public class BoothAnalysisResponse {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Furniture {
         private String item;
         private int quantity;
@@ -82,6 +89,7 @@ public class BoothAnalysisResponse {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Lighting {
         private String type;
         private Integer quantity; // optional
@@ -93,6 +101,7 @@ public class BoothAnalysisResponse {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class GraphicsAndBranding {
         private String type;
         private int quantity;
@@ -104,6 +113,7 @@ public class BoothAnalysisResponse {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class AiConfidence {
         @JsonProperty("overall_score")
         private double overallScore;

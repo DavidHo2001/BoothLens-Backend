@@ -1,14 +1,23 @@
 package com.boothlens.service;
 
+import com.boothlens.dto.request.admin.TransactionSearchRequestDto;
+import com.boothlens.dto.response.pagination.PaginatedResponseDto;
+import com.boothlens.dto.response.transaction.TransactionDto;
 import com.boothlens.entity.Transaction;
 import com.boothlens.repository.TransactionRepository;
+import com.boothlens.specification.TransactionSpecifications;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class TransactionService {
 
     @Autowired
@@ -64,5 +73,83 @@ public class TransactionService {
         tx.setReferenceCode(analysisRefCode);
         tx.setDescription("Consumed tokens for Booth AI Analysis");
         transactionRepository.save(tx);
+    }
+
+    @Transactional
+    public void recordRefund(Integer userId, BigDecimal usdAmount, int tokensRefunded, int superTokensRefunded, String referenceCode) {
+        Transaction tx = new Transaction();
+        tx.setUserId(userId);
+        tx.setTransactionType("REFUND");
+        tx.setAmount(usdAmount);
+        tx.setTokenAmount(tokensRefunded);
+        tx.setSuperTokenAmount(superTokensRefunded);
+        tx.setReferenceCode(referenceCode);
+        tx.setDescription(getDescription(referenceCode));
+        transactionRepository.save(tx);
+        log.info("Recorded refund for user {} with reference code {}", userId, referenceCode);
+    }
+
+    public List<TransactionDto> getCurrentUserTransactions(Integer userId) {
+        return transactionRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public PaginatedResponseDto<TransactionDto> adminSearch(TransactionSearchRequestDto request) {
+        Page<Transaction> page = transactionRepository.findAll(
+                TransactionSpecifications.withFilters(
+                        request.getKeyword(),
+                        request.getUserId(),
+                        request.getStatus(),
+                        request.getTransactionType()
+                ),
+                request.getPageable()
+        );
+        return new PaginatedResponseDto<>(page.map(this::toDto));
+    }
+
+    @Transactional
+    public Transaction createAdminAdjustment(Integer userId,
+                                             BigDecimal balanceDelta,
+                                             Integer tokenDelta,
+                                             Integer superTokenDelta,
+                                             String referenceCode,
+                                             String description) {
+        Transaction tx = new Transaction();
+        tx.setUserId(userId);
+        tx.setTransactionType("ADMIN_ADJUST");
+        tx.setAmount(balanceDelta != null ? balanceDelta : BigDecimal.ZERO);
+        tx.setTokenAmount(tokenDelta != null ? tokenDelta : 0);
+        tx.setSuperTokenAmount(superTokenDelta != null ? superTokenDelta : 0);
+        tx.setReferenceCode(referenceCode);
+        tx.setDescription(description != null ? description : "Admin adjusted user credits");
+        tx.setStatus("SUCCESS");
+        return transactionRepository.saveAndFlush(tx);
+    }
+
+    private String getDescription(String referenceCode) {
+        if (referenceCode == null || referenceCode.isBlank()) return "Refund for unknown reason";
+        String codePrefix = referenceCode.split("-")[0];
+        switch (codePrefix) {
+            case "BA":
+                return "Refund for Booth AI Analysis";
+            default:
+                return "Refund for unknown reason";
+        }
+    }
+
+    private TransactionDto toDto(Transaction transaction) {
+        return TransactionDto.builder()
+                .id(transaction.getId())
+                .userId(transaction.getUserId())
+                .transactionType(transaction.getTransactionType())
+                .amount(transaction.getAmount())
+                .tokenAmount(transaction.getTokenAmount())
+                .superTokenAmount(transaction.getSuperTokenAmount())
+                .referenceCode(transaction.getReferenceCode())
+                .description(transaction.getDescription())
+                .status(transaction.getStatus())
+                .createdAt(transaction.getCreatedAt())
+                .build();
     }
 }

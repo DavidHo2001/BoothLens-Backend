@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-
+import java.math.BigDecimal;
 @Service
 @Slf4j
 public class BoothAnalysisService {
@@ -58,7 +58,7 @@ public class BoothAnalysisService {
 
 
     //TODO: async the open router calling, add refundToken logic (處理失敗的補償邏輯 (退還 Token、更新狀態))
-    public BoothAnalysisResponse analyzeBooth(MultipartFile[] images, BoothAnalysisRequest request) {
+    public String analyzeBooth(MultipartFile[] images, BoothAnalysisRequest request) {
         log.info("Starting analysis for booth size: {}x{}x{} {}",
                 request.getBoothWidth(), request.getBoothLength(), request.getBoothHeight(), request.getBoothSizeUnit());
 
@@ -76,36 +76,46 @@ public class BoothAnalysisService {
         if(!isAdmin) {
             userCreditsService.consumeToken(userId, TOKEN_CONSUMPTION_PER_ANALYSIS, 0, savedUserRequest.getReferenceCode());
         }
-        // Step 5. Upload images to S3 via FileRecordService
+        //Below are the stesp may occur errors
         try {
-            List<FileRecord> savedImageRecords = fileRecordService.uploadImagesAndSaveRecords(
-                    images, userId, savedUserRequest.getReferenceCode()
-            );
-            log.info("Saved {} images to database and S3", savedImageRecords.size());
+            // Step 5. Upload images to S3 via FileRecordService
+            try {
+                List<FileRecord> savedImageRecords = fileRecordService.uploadImagesAndSaveRecords(
+                        images, userId, savedUserRequest.getReferenceCode()
+                );
+                log.info("Saved {} images to database and S3", savedImageRecords.size());
+            } catch (Exception e) {
+                log.error("Failed to upload images", e);
+                throw new RuntimeException("Failed to upload images", e);
+            }
+
+            // Step 6. Send request to OpenRouter
+            String jsonResult = openRouterService.sendRequestWithImage(images, systemPrompt, userPromptText);
+            BoothAnalysisResponse response;
+            try {
+                response = objectMapper.readValue(jsonResult, BoothAnalysisResponse.class);
+            } catch (Exception e) {
+                log.error("Failed to parse OpenRouter response: {}", e.getMessage());
+                throw new RuntimeException("Failed to parse analysis response", e);
+            }
+
+            // Step 7. Calculate cost (TO COMPLETE THE LOGIC)
+            BoothQuotationCalculation calculationResult = calculationService.dummyCalculateBoothQuotation();
+
+            // Step 8. Generate PDF async
+            // 將 PDF 生成與上傳交給背景執行，不阻擋 API 回應
+            generateAndUploadPdfAsync(calculationResult, userId, savedUserRequest.getId(), savedUserRequest.getReferenceCode());
+
+            return savedUserRequest.getReferenceCode();
+
         } catch (Exception e) {
-            log.error("Failed to upload images", e);
-            throw new RuntimeException("Failed to upload images", e);
+            //補償Rollback logic (退還 Token、更新狀態)
+            if(!isAdmin) userCreditsService.refund(savedUserRequest, BigDecimal.ZERO, TOKEN_CONSUMPTION_PER_ANALYSIS, 0);
+            userRequestService.updateUserRequestStatus(userId, savedUserRequest.getId(), "FAILED");
+            log.error("Failed to analyze booth", e);
+            throw new RuntimeException("Failed to analyze booth", e);
         }
-
-        // Step 6. Send request to OpenRouter
-        String jsonResult = openRouterService.sendRequestWithImage(images, systemPrompt, userPromptText);
-        BoothAnalysisResponse response;
-        try {
-            response = objectMapper.readValue(jsonResult, BoothAnalysisResponse.class);
-        } catch (Exception e) {
-            log.error("Failed to parse OpenRouter response: {}", e.getMessage());
-            throw new RuntimeException("Failed to parse analysis response", e);
-        }
-
-        // Step 7. Calculate cost (TO COMPLETE THE LOGIC)
-        BoothQuotationCalculation calculationResult = calculationService.dummyCalculateBoothQuotation();
-
-        // Step 8. Generate PDF async
-        // 將 PDF 生成與上傳交給背景執行，不阻擋 API 回應
-        generateAndUploadPdfAsync(calculationResult, userId, savedUserRequest.getId(), savedUserRequest.getReferenceCode());
-
-        return response;
-    }
+    } 
 
     @Async
     public void generateAndUploadPdfAsync(BoothQuotationCalculation calculationResult, Integer userId, Integer requestId, String referenceCode) {

@@ -100,15 +100,15 @@ prompt:
     {
       "booth_specs": {"estimated_area": "", "structure_type": "", "open_sides": 0},
       "flooring": {"material": "", "color": "", "is_raised_platform": false},
-      "walls": {"material": "", "back_wall_qty": 0, "side_wall_qty": 0},
-      "av_equipment": [{"item": "", "estimated_size_inches": 0, "quantity": 0}],
-      "furniture": [{"item": "", "quantity": 0, "color": ""}],
-      "lighting": [{"type": "", "quantity": 0}],
-      "graphics_and_branding": [{"type": "", "quantity": 0}],
+      "walls": {"material": "", "has_seamless_finish": false, "back_wall_qty": 0, "side_wall_qty": 0},
+      "av_equipment": [{"item": "", "estimated_size_inches": 0, "quantity": 0, "mounting": ""}],
+      "furniture": [{"item": "", "quantity": 0, "color": "", "has_custom_logo": false}],
+      "lighting": [{"type": "", "quantity": 0, "quantity_estimated_meters": 0}],
+      "graphics_and_branding": [{"type": "", "quantity": 0, "estimated_size": ""}],
       "ai_confidence": {"overall_score": 0.0, "unseen_assumptions": []}
     }
 
 openrouter:
   api-key: ${OPENROUTER_API_KEY}
-  model: openai/gpt-4o-mini
+  model: ${OPENROUTER_MODEL}
   request-url: "https://openrouter.ai/api/v1/chat/completions"

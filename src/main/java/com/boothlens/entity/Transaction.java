@@ -18,7 +18,7 @@ public class Transaction {
     private Integer userId;
 
     @Column(name = "transaction_type", nullable = false, length = 50)
-    private String transactionType; // DEPOSIT, PURCHASE_TOKEN, CONSUME_TOKEN
+    private String transactionType; // DEPOSIT, PURCHASE_TOKEN, CONSUME_TOKEN, REFUND
 
     @Column(name = "amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal amount = BigDecimal.ZERO; // USD

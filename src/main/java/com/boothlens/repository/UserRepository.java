@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import com.boothlens.entity.User;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -14,4 +15,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     User findFirstById(Integer id);
     
     boolean existsByEmail(String email);
+
+    List<User> findByRoleIdAndIsBlockedFalseOrderByIdAsc(Integer roleId);
 }

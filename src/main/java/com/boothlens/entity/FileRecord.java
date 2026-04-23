@@ -23,6 +23,9 @@ public class FileRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "reference_code", length = 100)
+    private String referenceCode; //E.g. BA-Request-1
+
     @Column(name = "user_id", nullable = false)
     private Integer userId;
 

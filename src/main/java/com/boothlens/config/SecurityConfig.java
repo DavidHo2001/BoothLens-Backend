@@ -10,14 +10,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-
-import java.util.Arrays;
 
 /**
  * Spring Security Configuration for Booth Lens Backend Application
@@ -70,6 +65,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/superadmin/**").hasRole("SUPERADMIN")
                 .requestMatchers("/api/profile/**").authenticated()
                 .requestMatchers("/api/v1/booth/**").authenticated()
+                .requestMatchers("/api/v1/user/**").authenticated()
                 // All other requests are public
                 .anyRequest().permitAll()
             )

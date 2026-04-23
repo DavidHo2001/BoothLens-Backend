@@ -10,6 +10,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.client.HttpStatusCodeException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -102,17 +103,29 @@ public class OpenRouterService {
             ResponseEntity<String> response = restTemplate.postForEntity(requestUrl, entity, String.class);
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                // 解析 OpenRouter 回傳的 JSON
-                JsonNode root = objectMapper.readTree(response.getBody());
-                String aiMessage = root.path("choices").get(0).path("message").path("content").asText();
-                
-                // 清理可能出現的 Markdown 標籤
+                String responseBody = response.getBody();
+                log.info("OpenRouter Response: {}", responseBody);
+                JsonNode root = objectMapper.readTree(responseBody);
+
+                JsonNode choicesNode = root.path("choices");
+                if (choicesNode.isMissingNode() || !choicesNode.isArray() || choicesNode.isEmpty()) {
+                    log.error("OpenRouter returned JSON without choices field! Full content: {}", responseBody);
+                    throw new RuntimeException("OpenRouter returned JSON without choices field!");
+                }
+
+                String aiMessage = choicesNode.get(0).path("message").path("content").asText();
                 return cleanJsonString(aiMessage);
             } else {
                 log.error("Failed to get valid response from OpenRouter: {}", response.getStatusCode());
                 throw new RuntimeException("OpenRouter API error");
             }
 
+        // 👇 新增這個 catch 區塊來捕捉 HTTP 錯誤
+        } catch (HttpStatusCodeException e) {
+            // 這裡會印出 OpenRouter 真正的報錯訊息！
+            log.error("OpenRouter API HTTP Error! Status: {}, Response Body: {}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new RuntimeException("OpenRouter API 拒絕了請求: " + e.getResponseBodyAsString(), e);
+            
         } catch (Exception e) {
             log.error("Error communicating with OpenRouter: ", e);
             throw new RuntimeException("Failed to analyze booth images", e);

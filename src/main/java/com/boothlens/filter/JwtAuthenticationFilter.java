@@ -13,6 +13,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -45,8 +47,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // 2. 解析 Token (這一步已經包含了驗證簽名與過期時間)
                 JwtProfile profile = jwtService.getJwtProfile(jwt);
 
-                // 3. 如果 Token 有效，且當前 SecurityContext 尚未被認證
-                if (profile != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                // 3. 如果 Token 有效，且當前 SecurityContext 尚未被認證或認證為 AnonymousUser
+                Authentication currentAuth = SecurityContextHolder.getContext().getAuthentication();
+                if (profile != null && (currentAuth == null || !currentAuth.isAuthenticated() || currentAuth instanceof AnonymousAuthenticationToken)){
                     
                     // 4. 轉換 Role 為 Spring Security 的 GrantedAuthority
                     List<GrantedAuthority> authorities = getAuthoritiesFromRole(profile.getRole());
