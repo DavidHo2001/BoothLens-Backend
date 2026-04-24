@@ -1,15 +1,14 @@
 package com.boothlens.service;
 
 import com.boothlens.constant.ReferenceCode;
+import com.boothlens.constant.RequestType;
 import com.boothlens.dto.request.admin.UpdateUserRequestAdminDto;
 import com.boothlens.dto.request.admin.UserRequestSearchRequestDto;
-import com.boothlens.dto.request.contractor.CreateContractorRequestDto;
-import com.boothlens.dto.response.contractor.ContractorMatchResponseDto;
+import com.boothlens.dto.request.common.CommonRequest;
+import com.boothlens.dto.response.CommonRequestResponse;
 import com.boothlens.dto.response.pagination.PaginatedResponseDto;
 import com.boothlens.dto.response.request.UserRequestDto;
-import com.boothlens.entity.User;
 import com.boothlens.entity.UserRequest;
-import com.boothlens.repository.UserRepository;
 import com.boothlens.repository.UserRequestRepository;
 import com.boothlens.specification.UserRequestSpecifications;
 import lombok.extern.slf4j.Slf4j;
@@ -37,9 +36,6 @@ public class UserRequestService {
 
     @Autowired
     private UserRequestRepository userRequestRepository;
-
-    @Autowired
-    private UserRepository userRepository;
 
     @Autowired
     private FileRecordService fileRecordService;
@@ -86,9 +82,9 @@ public class UserRequestService {
     }
 
     @Transactional
-    public ContractorMatchResponseDto createContractorRequest(Integer userId,
-                                                              CreateContractorRequestDto request,
-                                                              MultipartFile[] files) {
+    public CommonRequestResponse createCommonRequest(Integer userId,
+                                                          CommonRequest request,
+                                                          MultipartFile[] files) {
         // Optional linkage to previous scan request.
         if (StringUtils.hasText(request.getSourceReferenceCode())) {
             UserRequest sourceRequest = getRequestByReferenceCode(request.getSourceReferenceCode());
@@ -97,31 +93,23 @@ public class UserRequestService {
             }
         }
 
-        UserRequest contractorRequest = new UserRequest();
-        contractorRequest.setUserId(userId);
-        contractorRequest.setStatus("PENDING");
-        contractorRequest.setRequestInfo(buildContractorRequestInfo(request));
-        contractorRequest.setCreatedAt(Instant.now());
-        contractorRequest.setUpdatedAt(Instant.now());
-        contractorRequest = userRequestRepository.saveAndFlush(contractorRequest);
+        UserRequest userRequest = buildNewCommonRequest(userId, request);
+        userRequest = userRequestRepository.saveAndFlush(userRequest);
 
-        String contractorRefCode = ReferenceCode.CONTRACTOR_REQUEST.getReferenceCode(contractorRequest.getId());
-        contractorRequest.setReferenceCode(contractorRefCode);
-        contractorRequest = userRequestRepository.saveAndFlush(contractorRequest);
+        RequestType requestType = request.getRequestType();
+        ReferenceCode referenceCodeType = requestType.toReferenceCode();
+        String userRequestRefCode = referenceCodeType.getReferenceCode(userRequest.getId());
+        userRequest.setReferenceCode(userRequestRefCode);
+        UserRequest savedUserRequest = userRequestRepository.saveAndFlush(userRequest);
 
         // Attach files to contractor request when provided.
-        fileRecordService.uploadImagesAndSaveRecords(files, userId, contractorRefCode);
+        if (files != null && files.length > 0) {
+            fileRecordService.uploadImagesAndSaveRecords(files, userId, savedUserRequest.getReferenceCode());
+        }
 
-        User matchedContractor = pickContractor(contractorRequest.getId());
-        return ContractorMatchResponseDto.builder()
-                .contractorRequestReferenceCode(contractorRefCode)
-                .sourceReferenceCode(request.getSourceReferenceCode())
-                .contractorUserId(matchedContractor != null ? matchedContractor.getId() : null)
-                .contractorName(matchedContractor != null ? matchedContractor.getUsername() : null)
-                .contractorEmail(matchedContractor != null ? matchedContractor.getEmail() : null)
-                .message(matchedContractor != null
-                        ? "Contractor matched successfully"
-                        : "Request created. No contractor available right now")
+        return CommonRequestResponse.builder()
+                .requestReferenceCode(savedUserRequest.getReferenceCode())
+                .requestType(requestType)
                 .build();
     }
 
@@ -168,8 +156,8 @@ public class UserRequestService {
         }
     }
 
-    private String buildContractorRequestInfo(CreateContractorRequestDto request) {
-        StringBuilder builder = new StringBuilder("Contractor request");
+    private String buildRequestInfo(CommonRequest request) {
+        StringBuilder builder = new StringBuilder(request.getRequestType().name()).append(" request");
         if (StringUtils.hasText(request.getSourceReferenceCode())) {
             builder.append(" | SourceRef: ").append(request.getSourceReferenceCode().trim());
         }
@@ -177,12 +165,14 @@ public class UserRequestService {
         return builder.toString();
     }
 
-    private User pickContractor(Integer requestId) {
-        List<User> contractors = userRepository.findByRoleIdAndIsBlockedFalseOrderByIdAsc(2);
-        if (contractors.isEmpty()) {
-            return null;
-        }
-        int index = requestId % contractors.size();
-        return contractors.get(index);
+    private UserRequest buildNewCommonRequest(Integer userId, CommonRequest request) {
+        UserRequest userRequest = new UserRequest();
+        userRequest.setUserId(userId);
+        userRequest.setStatus("PENDING");
+        userRequest.setRequestInfo(buildRequestInfo(request));
+        userRequest.setCreatedAt(Instant.now());
+        userRequest.setUpdatedAt(Instant.now());
+        userRequest.setSourceReferenceCode(request.getSourceReferenceCode());
+        return userRequest;
     }
 }

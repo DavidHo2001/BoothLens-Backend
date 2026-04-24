@@ -2,7 +2,8 @@ package com.boothlens.constant;
 
 public enum ReferenceCode {
     BOOTH_ANALYSIS("BA"),
-    CONTRACTOR_REQUEST("CR");
+    CONTRACTOR_REQUEST("CR"),
+    SUPPORT_REQUEST("SUP");
 
     private final String value;
 

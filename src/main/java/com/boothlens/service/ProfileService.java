@@ -9,7 +9,6 @@ import com.boothlens.repository.UserProfileRepository;
 import com.boothlens.repository.UserRepository;
 import com.boothlens.util.SecurityUtils;
 import com.boothlens.util.ValidationUtils;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

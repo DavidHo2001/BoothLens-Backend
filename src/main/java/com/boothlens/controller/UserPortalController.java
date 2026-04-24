@@ -1,15 +1,18 @@
 package com.boothlens.controller;
 
-import com.boothlens.dto.request.contractor.CreateContractorRequestDto;
+import com.boothlens.dto.request.common.CommonRequest;
 import com.boothlens.dto.response.ApiResponse;
+import com.boothlens.dto.response.MeResponse;
 import com.boothlens.dto.response.UserCreditsResponse;
-import com.boothlens.dto.response.contractor.ContractorMatchResponseDto;
+import com.boothlens.dto.response.CommonRequestResponse;
 import com.boothlens.dto.response.file.FileRecordDto;
 import com.boothlens.dto.response.request.UserRequestDto;
 import com.boothlens.dto.response.transaction.TransactionDto;
 import com.boothlens.service.FileRecordService;
+import com.boothlens.service.ProfileService;
 import com.boothlens.service.TransactionService;
 import com.boothlens.service.UserCreditsService;
+import com.boothlens.service.UserRoleService;
 import com.boothlens.service.UserRequestService;
 import com.boothlens.util.SecurityUtils;
 import jakarta.validation.Valid;
@@ -35,15 +38,36 @@ public class UserPortalController {
     private final FileRecordService fileRecordService;
     private final TransactionService transactionService;
     private final UserCreditsService userCreditsService;
+    private final ProfileService profileService;
+    private final UserRoleService userRoleService;
 
     public UserPortalController(UserRequestService userRequestService,
                                 FileRecordService fileRecordService,
                                 TransactionService transactionService,
-                                UserCreditsService userCreditsService) {
+                                UserCreditsService userCreditsService,
+                                ProfileService profileService,
+                                UserRoleService userRoleService) {
         this.userRequestService = userRequestService;
         this.fileRecordService = fileRecordService;
         this.transactionService = transactionService;
         this.userCreditsService = userCreditsService;
+        this.profileService = profileService;
+        this.userRoleService = userRoleService;
+    }
+
+    /**
+     * All-in-one payload for app initialization after login.
+     */
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<MeResponse>> getMyAllInfo() {
+        Integer userId = requireCurrentUserId();
+        MeResponse meResponse = MeResponse.builder()
+                .requestDto(userRequestService.getCurrentUserRequests(userId))
+                .creditsResponse(userCreditsService.getUserCredits(userId))
+                .profileResponse(profileService.fetchProfile())
+                .roleResponse(userRoleService.getCurrentUserRole())
+                .build();
+        return ResponseEntity.ok(ApiResponse.success("Fetched all current user information", meResponse));
     }
 
     /**
@@ -79,15 +103,15 @@ public class UserPortalController {
     }
 
     /**
-     * 1.3) Create contractor request with optional source reference and attachments.
+     * 1.3) Create generic request with optional source reference and attachments.
      */
-    @PostMapping(value = "/requests/contractor", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<ContractorMatchResponseDto>> requestContractor(
-            @Valid @ModelAttribute CreateContractorRequestDto request,
+    @PostMapping(value = "/requests", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<CommonRequestResponse>> createCommonRequest(
+            @Valid @ModelAttribute CommonRequest request,
             @RequestParam(value = "files", required = false) MultipartFile[] files) {
         Integer userId = requireCurrentUserId();
-        ContractorMatchResponseDto result = userRequestService.createContractorRequest(userId, request, files);
-        return ResponseEntity.ok(ApiResponse.success("Contractor request created", result));
+        CommonRequestResponse response = userRequestService.createCommonRequest(userId, request, files);
+        return ResponseEntity.ok(ApiResponse.success("Request created", response));
     }
 
     /**

@@ -9,17 +9,12 @@ import com.boothlens.entity.UserProfile;
 import com.boothlens.repository.UserProfileRepository;
 import com.boothlens.repository.UserRepository;
 import com.boothlens.util.SecurityUtils;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Map;
 
 @Service
 @Slf4j

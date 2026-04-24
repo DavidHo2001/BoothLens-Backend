@@ -29,13 +29,13 @@ public class UserRequest {
     @Column(name = "reference_code", length = 100)
     private String referenceCode;
 
-    @Column(name = "request_info")
+    @Column(name = "request_info" , columnDefinition = "TEXT")
     private String requestInfo;
 
     @Column(name = "status", length = 20, nullable = false)
     private String status = "PENDING";  // default value in Java
 
-    @Column(name = "result_info")
+    @Column(name = "result_info" , columnDefinition = "TEXT")
     private String resultInfo;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -43,4 +43,7 @@ public class UserRequest {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @Column(name = "source_reference_code", length = 100)
+    private String sourceReferenceCode;
 }

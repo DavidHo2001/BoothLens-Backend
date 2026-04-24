@@ -4,15 +4,12 @@ import com.boothlens.constant.SystemConstants;
 import com.boothlens.dto.request.LoginRequest;
 import com.boothlens.dto.response.LoginResponse;
 import com.boothlens.dto.response.ApiResponse;
-import com.boothlens.dto.response.UserResponse;
 import com.boothlens.service.AuthService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")

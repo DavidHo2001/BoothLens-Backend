@@ -14,7 +14,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
@@ -56,11 +56,11 @@ springdoc:
 
 logging:
   level:
-    org.springframework.security: ERROR
+    org.springframework.security: WARN # Only log security issues, not every blocked request
     root: INFO
     com.boothlens: DEBUG
-    org.springframework.web: DEBUG
-    org.hibernate.SQL: ERROR
+    org.springframework.web: INFO # Changed from DEBUG to INFO to stop 404 noise
+    org.hibernate.SQL: ERROR # Keeps SQL logs quiet (unless you want to see them, then set to DEBUG)
 
 jwt:
   secret: ${JWT_SECRET}

@@ -5,6 +5,7 @@ import com.boothlens.dto.response.UserRoleResponse;
 import com.boothlens.entity.User;
 import com.boothlens.mapper.UserMapper;
 import com.boothlens.repository.UserRepository;
+import com.boothlens.util.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,5 +50,15 @@ public class UserRoleService {
         return users.stream()
                 .map(userMapper::toUserRoleResponse)
                 .collect(Collectors.toList());
+    }
+
+    public UserRoleResponse getCurrentUserRole() {
+        Integer userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            throw new IllegalArgumentException("User not authenticated");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        return userMapper.toUserRoleResponse(user);
     }
 }
