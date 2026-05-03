@@ -15,6 +15,8 @@ import com.boothlens.service.UserCreditsService;
 import com.boothlens.service.UserRoleService;
 import com.boothlens.service.UserRequestService;
 import com.boothlens.util.SecurityUtils;
+import com.boothlens.dto.response.announcement.AnnouncementDto;
+import com.boothlens.service.AnnouncementService;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +42,7 @@ public class UserPortalController {
     private final UserCreditsService userCreditsService;
     private final ProfileService profileService;
     private final UserRoleService userRoleService;
+    private final AnnouncementService announcementService;
 
     public UserPortalController(UserRequestService userRequestService,
                                 FileRecordService fileRecordService,
@@ -53,6 +56,7 @@ public class UserPortalController {
         this.userCreditsService = userCreditsService;
         this.profileService = profileService;
         this.userRoleService = userRoleService;
+        this.announcementService = announcementService;
     }
 
     /**
@@ -141,5 +145,14 @@ public class UserPortalController {
             throw new IllegalArgumentException("User not authenticated");
         }
         return userId;
+    }
+
+
+    @GetMapping("/announcements")
+    public ResponseEntity<ApiResponse<List<AnnouncementDto>>> getAllAnnouncements() {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Fetched announcements",
+                announcementService.getAllAnnouncements()
+        ));
     }
 }

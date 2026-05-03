@@ -86,22 +86,6 @@ public class AdminManagementController {
         ));
     }
 
-    @GetMapping("/announcements")
-    public ResponseEntity<ApiResponse<List<AnnouncementDto>>> getAllAnnouncements() {
-        return ResponseEntity.ok(ApiResponse.success(
-                "Fetched announcements",
-                announcementService.getAllAnnouncements()
-        ));
-    }
-
-    @GetMapping("/announcements/{id}")
-    public ResponseEntity<ApiResponse<AnnouncementDto>> getAnnouncementById(@PathVariable Integer id) {
-        return ResponseEntity.ok(ApiResponse.success(
-                "Fetched announcement",
-                announcementService.getAnnouncementById(id)
-        ));
-    }
-
     @PutMapping("/announcements/{id}")
     public ResponseEntity<ApiResponse<AnnouncementDto>> updateAnnouncement(
             @PathVariable Integer id,
