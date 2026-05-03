@@ -49,7 +49,9 @@ public class UserPortalController {
                                 TransactionService transactionService,
                                 UserCreditsService userCreditsService,
                                 ProfileService profileService,
-                                UserRoleService userRoleService) {
+                                UserRoleService userRoleService,
+                                AnnouncementService announcementService
+                            ) {
         this.userRequestService = userRequestService;
         this.fileRecordService = fileRecordService;
         this.transactionService = transactionService;
