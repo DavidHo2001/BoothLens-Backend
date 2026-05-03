@@ -136,8 +136,8 @@ public class ProfileService {
     }
 
     //for forgot password
-    public boolean resetUserPassword(Integer userId, ResetPasswordRequest request) {
-        User user = userRepository.findById(userId)
+    public boolean resetUserPassword(ResetPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
             .orElseThrow(() -> new IllegalArgumentException(SystemConstants.ERR_USER_NOT_FOUND));
 
         //Check verification code
