@@ -37,13 +37,4 @@ public class ProfileController {
         String message = profileService.updateProfile(request, response);
         return ResponseEntity.ok(ApiResponse.success(message));
     }
-
-    @PatchMapping("/reset-password")
-    public ResponseEntity<ApiResponse<Boolean>> resetUserPassword(@RequestBody ResetPasswordRequest request) {
-        boolean isPasswordReset = profileService.resetUserPassword(request);
-        return ResponseEntity.ok(ApiResponse.success(
-                isPasswordReset ? "User password updated successfully" : "User password reset failed",
-                isPasswordReset
-        ));
-    }
 }
