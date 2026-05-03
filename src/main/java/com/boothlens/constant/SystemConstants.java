@@ -14,11 +14,13 @@ public class SystemConstants {
     public static final String MSG_REGISTRATION_SUCCESS = "User registered successfully";
     public static final String MSG_PROFILE_UPDATE_SUCCESS = "Profile updated successfully. Please login again";
     public static final String MSG_CODE_SENT_SUCCESS = "Verification code sent successfully";
+    public static final String MSG_CODE_SENT_SUCCESS_IF_EMAIL_EXISTS = "Verification code sent if email exists in our system";
     public static final String MSG_ESTIMATION_SUCCESS = "Booth analysis completed successfully";
 
     public static final String ERR_INVALID_EMAIL_PASSWORD = "Invalid email or password";
     public static final String ERR_EMAIL_NOT_VERIFIED = "Please verify your email address before logging in";
     public static final String ERR_EMAIL_EXISTS = "Email already exists";
+    public static final String ERR_EMAIL_NOT_EXISTS = "Email does not exist";
     public static final String ERR_INVALID_VERIFICATION_CODE = "Invalid or expired verification code";
     public static final String ERR_VERIFICATION_CODE_TOO_SOON = "Please wait one minute before requesting another verification code";
     public static final String ERR_EMAIL_VERIFICATION_FAILED = "Failed to send verification code";

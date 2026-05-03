@@ -2,6 +2,7 @@ package com.boothlens.service;
 
 import com.boothlens.constant.SystemConstants;
 import com.boothlens.dto.request.UpdateProfileRequest;
+import com.boothlens.dto.request.ResetPasswordRequest;
 import com.boothlens.dto.response.ProfileResponse;
 import com.boothlens.entity.User;
 import com.boothlens.entity.UserProfile;
@@ -25,6 +26,9 @@ public class ProfileService {
 
     @Autowired
     private UserProfileRepository userProfileRepository;
+
+    @Autowired
+    private EmailVerificationService emailVerificationService;
     
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
@@ -129,5 +133,27 @@ public class ProfileService {
         }
         
         ValidationUtils.validatePasswordStrength(request.getPassword(), SystemConstants.PASSWORD_MIN_LENGTH_PROFILE);
+    }
+
+    //for forgot password
+    public boolean resetUserPassword(Integer userId, ResetPasswordRequest request) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException(SystemConstants.ERR_USER_NOT_FOUND));
+
+        //Check verification code
+        boolean isEmailVerificationCodeValid = emailVerificationService.verifyCode(request.getEmail(), request.getVerificationCode());
+        if (!isEmailVerificationCodeValid) {
+            throw new IllegalArgumentException(SystemConstants.ERR_INVALID_VERIFICATION_CODE);
+        }
+
+        //Check new password
+        ValidationUtils.validatePasswordMatch(request.getNewPassword(), request.getConfirmNewPassword());
+        ValidationUtils.validatePasswordStrength(request.getNewPassword(), SystemConstants.PASSWORD_MIN_LENGTH_PROFILE);
+        
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        User savedUser = userRepository.saveAndFlush(user);
+        
+        return savedUser != null;
+
     }
 }

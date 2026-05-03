@@ -2,6 +2,7 @@ package com.boothlens.service;
 
 import com.boothlens.constant.SystemConstants;
 import com.boothlens.entity.EmailVerification;
+import com.boothlens.repository.UserRepository;
 import com.boothlens.repository.EmailVerificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
@@ -19,6 +20,9 @@ public class EmailVerificationService {
     
     @Autowired
     private EmailVerificationRepository emailVerificationRepository;
+
+    @Autowired
+    private UserRepository userRepository;
     
     @Autowired
     private JavaMailSender mailSender;
@@ -104,5 +108,9 @@ public class EmailVerificationService {
         Instant oneMinuteAgo = Instant.now().minus(1, ChronoUnit.MINUTES);
         boolean recentSendExists = emailVerificationRepository.existsByEmailAndCreatedAtAfter(email.trim(), oneMinuteAgo);
         return !recentSendExists;
+    }
+
+    public boolean isEmailExistsInOurSystem(String email) {
+        return userRepository.existsByEmail(email);
     }
 } 
