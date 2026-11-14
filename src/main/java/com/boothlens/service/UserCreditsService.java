@@ -40,9 +40,8 @@ public class UserCreditsService {
     }
 
     /**
-     * 消耗 Token 進行 AI 分析
-     * 🌟 加上 @Transactional 確保扣款與記帳同時成功或同時失敗
-     * 🌟 加上 referenceCode 參數以便記帳
+     * Deducts tokens for an AI analysis. The credit update and ledger entry
+     * run in one transaction, keyed by the request reference code.
      */
     @Transactional
     public void consumeToken(Integer userId, Integer token, Integer superToken, String referenceCode) {
@@ -58,7 +57,7 @@ public class UserCreditsService {
         
         userCreditsRepository.save(userCredits);
         
-        // 🌟 呼叫 TransactionService 寫入帳本
+        // Record the consumption in the transaction ledger.
         transactionService.recordTokenConsumption(userId, token, superToken, referenceCode);
         log.info("Consumed {} tokens and {} super tokens for user {} with reference code {}", token, superToken, userId, referenceCode);
     }
@@ -74,7 +73,7 @@ public class UserCreditsService {
         userCredits.setBalance(userCredits.getBalance().add(balance));
         userCreditsRepository.save(userCredits);
 
-        // 🌟 寫入帳本
+        // Record the deposit in the transaction ledger.
         transactionService.recordDeposit(userId, balance, paymentGatewayRef);
     }
 
@@ -95,7 +94,7 @@ public class UserCreditsService {
         
         userCreditsRepository.save(userCredits);
 
-        // 🌟 寫入帳本
+        // Record the token purchase in the transaction ledger.
         transactionService.recordTokenPurchase(userId, usdCost != null ? usdCost : BigDecimal.ZERO, token, 0, orderRef);
     }
 

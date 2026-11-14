@@ -73,7 +73,9 @@ public class CalculationService {
     }
 
     /**
-     * 測試用的 Dummy Function (Hardcode 數值)
+     * Placeholder quotation used on the analysis path until pricing is derived
+     * from the model output. Line items and totals are fixed sample figures,
+     * not a live estimate.
      */
     public BoothQuotationCalculation dummyCalculateBoothQuotation() {
         List<BoothQuotationItem> items = new ArrayList<>();

@@ -99,7 +99,7 @@ public class BoothAnalysisService {
                 throw new RuntimeException("Failed to parse analysis response", e);
             }
 
-            // Step 7. Calculate cost (TO COMPLETE THE LOGIC)
+            // Step 7. Build the quotation. Pricing is still a placeholder until it is derived from the model output.
             BoothQuotationCalculation calculationResult = calculationService.dummyCalculateBoothQuotation();
 
             // Step 8. Generate PDF async
@@ -109,7 +109,7 @@ public class BoothAnalysisService {
             return savedUserRequest.getReferenceCode();
 
         } catch (Exception e) {
-            //補償Rollback logic (退還 Token、更新狀態)
+            // Compensate a failed analysis: refund tokens and mark the request as failed.
             if(!isAdmin) userCreditsService.refund(savedUserRequest, BigDecimal.ZERO, TOKEN_CONSUMPTION_PER_ANALYSIS, 0);
             userRequestService.updateUserRequestStatus(userId, savedUserRequest.getId(), "FAILED");
             log.error("Failed to analyze booth", e);
@@ -122,7 +122,7 @@ public class BoothAnalysisService {
         try {
             log.info("Start generating PDF in background for reference: {}", referenceCode);
             
-            // 🌟 呼叫 PDF Generator，傳入 calculationResult
+            // Generate the quotation PDF from the calculation result.
             byte[] pdfBytes = pdfGeneratorService.generateQuotationPdf(referenceCode, userId, calculationResult);
             
             String fileName = "BoothLens_Quotation_" + referenceCode + ".pdf";

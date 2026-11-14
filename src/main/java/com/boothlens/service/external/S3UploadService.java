@@ -72,7 +72,7 @@ public class S3UploadService {
                 .bucket(bucket)
                 .key(key)
                 .contentType(contentType)
-                .build(); // ⚠️ 沒有 PUBLIC_READ，確保檔案是私有的
+                .build(); // No public ACL; objects remain private.
 
         try {
             s3Client.putObject(putReq, requestBody);
@@ -82,7 +82,7 @@ public class S3UploadService {
     }
 
     /**
-     * 🌟 產生限時下載網址 (Pre-signed URL)
+     * Returns a time-limited pre-signed URL for downloading a private S3 object.
      */
     public String generatePresignedUrl(String key, int minutes) {
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
@@ -98,10 +98,10 @@ public class S3UploadService {
         return s3Presigner.presignGetObject(presignRequest).url().toString();
     }
 
-    //Key係用黎搵S3 File, File Name係比User睇/Download用 (internal use only)
+    // Object key is internal; the original file name is only for display and download.
     private String generateKey(String folderPrefix, String referenceCode, String filename) {
         if (referenceCode != null && !referenceCode.isBlank()) {
-            folderPrefix += referenceCode + "/";  //AWS 用Flat object storage, 冇所謂folder structure(only console 比你睇係folder咁)
+            folderPrefix += referenceCode + "/";  // S3 is flat object storage; the prefix is only a key convention.
         }
         String ext = FileUtil.extractExtension(filename);
         return folderPrefix + System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 8) + (ext.isEmpty() ? "" : "." + ext);

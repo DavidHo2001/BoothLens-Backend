@@ -30,7 +30,7 @@ public class AwsS3Config {
                 .build();
     }
 
-    // 🌟 新增 S3Presigner Bean，專門用來產生限時下載網址 (Pre-signed URL)
+    // Builds an S3Presigner for time-limited download URLs.
     @Bean
     public S3Presigner s3Presigner() {
         AwsBasicCredentials awsCreds = AwsBasicCredentials.create(accessKeyId, secretAccessKey);

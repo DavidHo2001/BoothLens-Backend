@@ -24,7 +24,7 @@ public class LoginController {
         return ResponseEntity.ok(ApiResponse.success(SystemConstants.MSG_LOGIN_SUCCESS, loginResponse));
     }
 
-    //TODO
+    // JWT is stateless, so logout only needs the client to discard the token.
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<String>> logout(HttpServletRequest request) {
         authService.logout(request);

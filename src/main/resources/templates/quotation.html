@@ -45,7 +45,7 @@
             </tr>
         </thead>
         <tbody>
-            <!-- 🌟 動態迴圈渲染每個項目 -->
+            <!-- Line items from the quotation calculation -->
             <tr th:each="item : ${calculation.items}">
                 <td th:text="${item.description}">Description</td>
                 <td style="text-align: center;" th:text="${item.quantity}">1</td>

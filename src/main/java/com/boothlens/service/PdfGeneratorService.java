@@ -27,7 +27,7 @@ public class PdfGeneratorService {
         context.setVariable("currentDate", today.format(formatter));
         context.setVariable("validUntil", today.plusDays(30).format(formatter));
         
-        // 🌟 將計算結果傳入 HTML
+        // Pass the quotation calculation into the HTML template.
         context.setVariable("calculation", calculation);
 
         String htmlContent = templateEngine.process("quotation", context);
